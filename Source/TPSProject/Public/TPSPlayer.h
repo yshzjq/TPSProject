@@ -26,4 +26,19 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+public:
+	// ÄÄÆ÷³ÍÆ® - Spring Arm, Cemera
+	UPROPERTY(EditAnywhere)
+	class USpringArmComponent* SpringArmComp;
+
+	UPROPERTY(EditAnywhere)
+	class UCameraComponent* CameraComp;
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = TPS)
+	FVector Direction;
+
+
+
+
 };
