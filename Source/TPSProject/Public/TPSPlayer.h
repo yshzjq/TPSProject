@@ -38,7 +38,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = TPS)
 	FVector Direction;
 
+	// 입력 처리 함수 제작
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputMappingContext* IMC_TPS;
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_LookUp;
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_Turn;
 
+	// 좌우 회전
+	void Turn(const struct FInputActionValue& inputValue);
+	// 상하 회전
+	void LookUp(const struct FInputActionValue& inputValue);
 
 
 };

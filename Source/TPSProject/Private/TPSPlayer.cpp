@@ -5,6 +5,9 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "EnhancedInputSubSystems.h"
+#include "EnhancedInputComponent.h"
+#include "InputActionValue.h"
 
 // Sets default values
 ATPSPlayer::ATPSPlayer()
@@ -51,6 +54,17 @@ ATPSPlayer::ATPSPlayer()
 void ATPSPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+
+	auto pc = Cast<APlayerController>(Controller);
+	if (pc)
+	{
+		auto subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(pc->GetLocalPlayer());
+
+		if (subsystem)
+		{
+			subsystem->AddMappingContext(IMC_TPS, 0);
+		}
+	}
 	
 }
 
@@ -65,6 +79,26 @@ void ATPSPlayer::Tick(float DeltaTime)
 void ATPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	// 입력 함수들을 모두 연결
 
+	auto PlayerInput = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
+	if (PlayerInput)
+	{
+		PlayerInput->BindAction(IA_Turn, ETriggerEvent::Triggered, this, &ATPSPlayer::Turn);
+		PlayerInput->BindAction(IA_LookUp, ETriggerEvent::Triggered, this, &ATPSPlayer::LookUp);
+	}
 }
 
+void ATPSPlayer::Turn(const FInputActionValue& inputValue)
+{
+	float value = inputValue.Get<float>();
+	AddControllerYawInput(value);
+}
+
+void ATPSPlayer::LookUp(const FInputActionValue& inputValue)
+{
+	float value = inputValue.Get<float>();
+	AddControllerPitchInput(value);
+}
+
+	
