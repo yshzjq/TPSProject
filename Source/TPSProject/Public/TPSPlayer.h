@@ -35,8 +35,6 @@ public:
 	class UCameraComponent* CameraComp;
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = TPS)
-	FVector Direction;
 
 	// 입력 처리 함수 제작
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -51,5 +49,22 @@ public:
 	// 상하 회전
 	void LookUp(const struct FInputActionValue& inputValue);
 
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_PlayerMove;
+	// 이동 속도
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerSetting")
+	float walkSpeed = 600;
+	// 이동 방향
+	FVector Direction;
+
+	void PlayerMove(const struct FInputActionValue& inputValue);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_Jump;
+	// 점프 입력 처리
+
+	void InputJump(const struct FInputActionValue& inputValue);
+
+	void Move();
 
 };
