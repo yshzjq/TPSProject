@@ -34,6 +34,10 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UCameraComponent* CameraComp;
 
+	//컴포넌트 - Weapon (권총) 생략20240819영상
+	UPROPERTY(EditAnywhere,Category = weapon)
+	class USkeletalMeshComponent* HandGun;  
+
 public:
 
 	// 입력 처리 함수 제작
@@ -43,6 +47,10 @@ public:
 	class UInputAction* IA_LookUp;
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_Turn;
+
+public:
+	UPROPERTY(EditAnywhere,Category = BulletFactory)
+	TSubclassOf<class ABullet> BulletFactory;
 
 	// 좌우 회전
 	void Turn(const struct FInputActionValue& inputValue);
@@ -66,5 +74,11 @@ public:
 	void InputJump(const struct FInputActionValue& inputValue);
 
 	void Move();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_Fire;
+	//총알 발사 처리
+	void InputFire(const struct FInputActionValue& inputValue);
+
 
 };

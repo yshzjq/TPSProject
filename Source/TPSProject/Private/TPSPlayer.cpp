@@ -8,6 +8,7 @@
 #include "EnhancedInputSubSystems.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
+#include "Bullet.h"
 
 // Sets default values
 ATPSPlayer::ATPSPlayer()
@@ -47,6 +48,22 @@ ATPSPlayer::ATPSPlayer()
 
 		JumpMaxCount = 2;
 		GetCharacterMovement()->AirControl = 1;
+
+		// 컴포넌트 권총() 생략20240819영상
+		HandGun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BerettaPistol"));
+		// 권총을 Mesh에 붙인다.
+		HandGun->SetupAttachment(GetMesh());
+		HandGun->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		ConstructorHelpers::FObjectFinder<USkeletalMesh> tempHandGun(TEXT("/Script/Engine.SkeletalMesh'/Game/Resources/GunBeretta/source/9mm_Hand_gun.9mm_Hand_gun'"));
+
+		if (tempHandGun.Succeeded())
+		{
+			HandGun->SetSkeletalMesh(tempHandGun.Object);
+			HandGun->SetRelativeLocationAndRotation(FVector(1.4f, 40.5f, 136.2f),FRotator(0,-70,0));
+			HandGun->SetRelativeScale3D(FVector(2.f));
+
+		}
 	}
 
 
@@ -92,6 +109,7 @@ void ATPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 		PlayerInput->BindAction(IA_LookUp, ETriggerEvent::Triggered, this, &ATPSPlayer::LookUp);
 		PlayerInput->BindAction(IA_PlayerMove, ETriggerEvent::Triggered, this, &ATPSPlayer::PlayerMove);
 		PlayerInput->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ATPSPlayer::InputJump);
+		PlayerInput->BindAction(IA_Fire, ETriggerEvent::Started, this, &ATPSPlayer::InputFire);
 	}
 }
 
@@ -130,6 +148,14 @@ void ATPSPlayer::Move()
 	AddMovementInput(FVector(Direction.X, Direction.Y, 0).GetSafeNormal());
 	Direction = FVector::ZeroVector;
 }
+
+void ATPSPlayer::InputFire(const FInputActionValue& inputValue)
+{
+	FTransform FirePosition = HandGun->GetSocketTransform(TEXT("FirePosition"));
+	GetWorld()->SpawnActor<ABullet>(BulletFactory, FirePosition);
+}
+
+
 
 
 
