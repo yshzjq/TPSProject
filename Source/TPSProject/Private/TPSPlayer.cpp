@@ -9,6 +9,7 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "Bullet.h"
+#include "Blueprint/UserWidget.h"
 
 // Sets default values
 ATPSPlayer::ATPSPlayer()
@@ -92,6 +93,12 @@ void ATPSPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// 시작할 때 두 개의 위젯을 생성한다.
+	CrosshairUI = CreateWidget(GetWorld(), CrosshairUIfactory);
+	SniperUI = CreateWidget(GetWorld(), SniperUIfactory);
+
+	
+
 	auto pc = Cast<APlayerController>(Controller);
 	if (pc)
 	{
@@ -132,6 +139,9 @@ void ATPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 		PlayerInput->BindAction(IA_Fire, ETriggerEvent::Started, this, &ATPSPlayer::InputFire);
 		PlayerInput->BindAction(IA_HandGun, ETriggerEvent::Started, this, &ATPSPlayer::ChangeToHandGun);
 		PlayerInput->BindAction(IA_SniperGun, ETriggerEvent::Started, this, &ATPSPlayer::ChangeToSniperGun);
+		// 스나이퍼 조준 모드
+		PlayerInput->BindAction(IA_Sniper, ETriggerEvent::Started, this, &ATPSPlayer::SniperAim);
+		PlayerInput->BindAction(IA_Sniper, ETriggerEvent::Completed, this, &ATPSPlayer::SniperAim);
 	}
 }
 
@@ -192,13 +202,49 @@ void ATPSPlayer::ChangeToHandGun(const FInputActionValue& inputValue)
 	bUsingHandGun = true;
 	SniperGun->SetVisibility(false);
 	HandGun->SetVisibility(true);
+
+	//CrosshairUI->AddToViewport();
+	//SniperUI->RemoveFromParent();
+
+	//CameraComp->FieldOfView = 90;
 }
 
 void ATPSPlayer::ChangeToSniperGun(const FInputActionValue& inputValue)
 {
+	// 소총 사용
 	bUsingHandGun = false;
 	SniperGun->SetVisibility(true);
 	HandGun->SetVisibility(false);
+	
+	//SniperUI->AddToViewport();
+	//CrosshairUI->RemoveFromParent();
+
+	//CameraComp->FieldOfView = 45;
+}
+
+void ATPSPlayer::SniperAim(const FInputActionValue& inputValue)
+{
+	// 스나이퍼 모드가 아닐 경우 처리하지 않는다.
+	if (bUsingHandGun)
+	{
+		return;
+	}
+	// Pressed(Started) 입력처리
+	if(bSniperAim == false)
+	{
+		// 스나이퍼 조준 모드 활성화
+		bSniperAim = true;
+		// 스나이퍼 조준 UI 등록
+		SniperUI->AddToViewport();
+		CameraComp->SetFieldOfView(45.0f);
+	}
+	else //Released(Completed) 입력 처리
+	{
+		bSniperAim = false;
+		SniperUI->RemoveFromViewport();
+		CameraComp->SetFieldOfView(90.f);
+	}
+
 }
 
 

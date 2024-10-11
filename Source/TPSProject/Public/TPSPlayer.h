@@ -31,7 +31,7 @@ public:
 	UPROPERTY(EditAnywhere)
 	class USpringArmComponent* SpringArmComp;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
 	class UCameraComponent* CameraComp;
 
 	//컴포넌트 - Weapon (권총) 생략20240819영상
@@ -96,5 +96,25 @@ public:
 	void ChangeToHandGun(const struct FInputActionValue& inputValue);
 	// thchd(Sniper Gun) 으로 변경
 	void ChangeToSniperGun(const struct FInputActionValue& inputValue);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_Sniper;
+	// 스나이퍼 조준 처리
+	void SniperAim(const struct FInputActionValue& inputValue);
+	//스나이퍼 조준 중인지 여부
+	bool bSniperAim = false;
+
+	// 크로스헤어, 스나이퍼 위젯 UI 공장을 가지고 있다.
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class UUserWidget> CrosshairUIfactory;
+
+	UPROPERTY(EditDefaultsOnly)
+	class UUserWidget* CrosshairUI;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class UUserWidget> SniperUIfactory;
+
+	UPROPERTY(EditDefaultsOnly)
+	class UUserWidget* SniperUI;
 
 };
