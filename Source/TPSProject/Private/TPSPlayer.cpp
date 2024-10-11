@@ -52,7 +52,7 @@ ATPSPlayer::ATPSPlayer()
 		// 컴포넌트 권총() 생략20240819영상
 		HandGun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BerettaPistol"));
 		// 권총을 Mesh에 붙인다.
-		HandGun->SetupAttachment(GetMesh());
+		HandGun->SetupAttachment(GetMesh(),TEXT("FirePosition"));
 		HandGun->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 		ConstructorHelpers::FObjectFinder<USkeletalMesh> tempHandGun(TEXT("/Script/Engine.SkeletalMesh'/Game/Resources/GunBeretta/source/9mm_Hand_gun.9mm_Hand_gun'"));
@@ -60,20 +60,22 @@ ATPSPlayer::ATPSPlayer()
 		if (tempHandGun.Succeeded())
 		{
 			HandGun->SetSkeletalMesh(tempHandGun.Object);
-			HandGun->SetRelativeLocationAndRotation(FVector(1.4f, 40.5f, 136.2f),FRotator(0,-70,0));
+			HandGun->SetRelativeLocationAndRotation(FVector(-28.f, -7.25f, 146.f),FRotator(0,-160,0));
 			HandGun->SetRelativeScale3D(FVector(2.f));
 		}
 
 		// 스나이퍼 건을 생성해서 Mesh에 붙인다.
 		SniperGun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CheyTacRifle"));
-		SniperGun->SetupAttachment(GetMesh());
+		SniperGun->SetupAttachment(GetMesh(),TEXT("ShootPosition"));
+		SniperGun->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 		// 에셋도 로드해서 적용한다.
 		ConstructorHelpers::FObjectFinder<USkeletalMesh> tempSniperGun(TEXT("/Script/Engine.SkeletalMesh'/Game/Resources/GunCheyTac/source/model.model'"));
 
 		if (tempSniperGun.Succeeded())
 		{
 			SniperGun->SetSkeletalMesh(tempSniperGun.Object);
-			SniperGun->SetRelativeLocation(FVector(-10.f, 85.f, 160.f));
+			SniperGun->SetRelativeLocationAndRotation(FVector(-15.f, 85.f, 160.f),FRotator(0.f,0.f,0.f));
 			SniperGun->SetRelativeScale3D(FVector(0.02f));
 
 		}
@@ -171,8 +173,17 @@ void ATPSPlayer::Move()
 
 void ATPSPlayer::InputFire(const FInputActionValue& inputValue)
 {
-	FTransform FirePosition = GetMesh()->GetSocketTransform(TEXT("FirePosition"));
-	GetWorld()->SpawnActor<ABullet>(BulletFactory, FirePosition);
+	if (bUsingHandGun * (true))
+	{
+		FTransform FirePosition = HandGun->GetSocketTransform(TEXT("FirePosition"));
+		GetWorld()->SpawnActor<ABullet>(BulletFactory, FirePosition);
+	}
+	else
+	{
+		FTransform FirePosition = SniperGun->GetSocketTransform(TEXT("ShootPosition"));
+		GetWorld()->SpawnActor<ABullet>(BulletFactory, FirePosition);
+	}
+	
 }
 
 void ATPSPlayer::ChangeToHandGun(const FInputActionValue& inputValue)
