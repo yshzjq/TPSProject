@@ -34,4 +34,14 @@ public:
 	UPROPERTY(EditAnywhere)
 	class UProjectileMovementComponent* MoveComp;
 
+	//총알 제거 함수
+	void Die();
+
+	//void SetTimer()
+	//{
+	//	FTimerHandle& InOutHandle; // 등록할 알람 시계
+	//	UserClass* InObj		  // 알림 처리를 갖고 있는 객체
+	//	typename FTimerDelegate::
+	//}
+
 };

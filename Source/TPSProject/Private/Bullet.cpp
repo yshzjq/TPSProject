@@ -29,6 +29,9 @@ ABullet::ABullet()
 	MoveComp->MaxSpeed = 3000.f;
 	MoveComp->bShouldBounce = true;
 	MoveComp->Bounciness = .3f;
+	//총알 생명 주기
+	//InitialLifeSpan = 2.0f;
+
 
 	MoveComp->SetUpdatedComponent(CollisionComp);
 }
@@ -37,6 +40,9 @@ ABullet::ABullet()
 void ABullet::BeginPlay()
 {
 	Super::BeginPlay();
+
+	FTimerHandle DeathTimer;
+	GetWorld()->GetTimerManager().SetTimer(DeathTimer, this, &ABullet::Die, 2.0f, false);
 	
 }
 
@@ -45,5 +51,10 @@ void ABullet::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void ABullet::Die()
+{
+	Destroy();
 }
 
