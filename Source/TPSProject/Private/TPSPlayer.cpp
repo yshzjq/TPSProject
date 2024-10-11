@@ -49,21 +49,36 @@ ATPSPlayer::ATPSPlayer()
 		JumpMaxCount = 2;
 		GetCharacterMovement()->AirControl = 1;
 
-		//// 컴포넌트 권총() 생략20240819영상
-		//HandGun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BerettaPistol"));
-		//// 권총을 Mesh에 붙인다.
-		//HandGun->SetupAttachment(GetMesh());
-		//HandGun->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		// 컴포넌트 권총() 생략20240819영상
+		HandGun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BerettaPistol"));
+		// 권총을 Mesh에 붙인다.
+		HandGun->SetupAttachment(GetMesh());
+		HandGun->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-		//ConstructorHelpers::FObjectFinder<USkeletalMesh> tempHandGun(TEXT("/Script/Engine.SkeletalMesh'/Game/Resources/GunBeretta/source/9mm_Hand_gun.9mm_Hand_gun'"));
+		ConstructorHelpers::FObjectFinder<USkeletalMesh> tempHandGun(TEXT("/Script/Engine.SkeletalMesh'/Game/Resources/GunBeretta/source/9mm_Hand_gun.9mm_Hand_gun'"));
 
-		//if (tempHandGun.Succeeded())
-		//{
-		//	HandGun->SetSkeletalMesh(tempHandGun.Object);
-		//	HandGun->SetRelativeLocationAndRotation(FVector(1.4f, 40.5f, 136.2f),FRotator(0,-70,0));
-		//	HandGun->SetRelativeScale3D(FVector(2.f));
+		if (tempHandGun.Succeeded())
+		{
+			HandGun->SetSkeletalMesh(tempHandGun.Object);
+			HandGun->SetRelativeLocationAndRotation(FVector(1.4f, 40.5f, 136.2f),FRotator(0,-70,0));
+			HandGun->SetRelativeScale3D(FVector(2.f));
+		}
 
-		//}
+		// 스나이퍼 건을 생성해서 Mesh에 붙인다.
+		SniperGun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CheyTacRifle"));
+		SniperGun->SetupAttachment(GetMesh());
+		// 에셋도 로드해서 적용한다.
+		ConstructorHelpers::FObjectFinder<USkeletalMesh> tempSniperGun(TEXT("/Script/Engine.SkeletalMesh'/Game/Resources/GunCheyTac/source/model.model'"));
+
+		if (tempSniperGun.Succeeded())
+		{
+			SniperGun->SetSkeletalMesh(tempSniperGun.Object);
+			SniperGun->SetRelativeLocation(FVector(-10.f, 85.f, 160.f));
+			SniperGun->SetRelativeScale3D(FVector(0.02f));
+
+		}
+		
+
 	}
 
 
@@ -85,6 +100,9 @@ void ATPSPlayer::BeginPlay()
 			subsystem->AddMappingContext(IMC_TPS, 0);
 		}
 	}
+
+	// 권총(Hand Gun)으로 기본 설정
+	ChangeToHandGun(FInputActionValue());
 	
 }
 
@@ -110,6 +128,8 @@ void ATPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 		PlayerInput->BindAction(IA_PlayerMove, ETriggerEvent::Triggered, this, &ATPSPlayer::PlayerMove);
 		PlayerInput->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ATPSPlayer::InputJump);
 		PlayerInput->BindAction(IA_Fire, ETriggerEvent::Started, this, &ATPSPlayer::InputFire);
+		PlayerInput->BindAction(IA_HandGun, ETriggerEvent::Started, this, &ATPSPlayer::ChangeToHandGun);
+		PlayerInput->BindAction(IA_SniperGun, ETriggerEvent::Started, this, &ATPSPlayer::ChangeToSniperGun);
 	}
 }
 
@@ -153,6 +173,21 @@ void ATPSPlayer::InputFire(const FInputActionValue& inputValue)
 {
 	FTransform FirePosition = GetMesh()->GetSocketTransform(TEXT("FirePosition"));
 	GetWorld()->SpawnActor<ABullet>(BulletFactory, FirePosition);
+}
+
+void ATPSPlayer::ChangeToHandGun(const FInputActionValue& inputValue)
+{
+	// 권총(Hand Gun)사용
+	bUsingHandGun = true;
+	SniperGun->SetVisibility(false);
+	HandGun->SetVisibility(true);
+}
+
+void ATPSPlayer::ChangeToSniperGun(const FInputActionValue& inputValue)
+{
+	bUsingHandGun = false;
+	SniperGun->SetVisibility(true);
+	HandGun->SetVisibility(false);
 }
 
 

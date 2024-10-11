@@ -35,8 +35,11 @@ public:
 	class UCameraComponent* CameraComp;
 
 	//컴포넌트 - Weapon (권총) 생략20240819영상
-	//UPROPERTY(EditAnywhere,Category = weapon)
-	//class USkeletalMeshComponent* HandGun;  
+	UPROPERTY(EditAnywhere,Category = weapon)
+	class USkeletalMeshComponent* HandGun;  
+
+	UPROPERTY(EditAnywhere,Category = waepon)
+	class USkeletalMeshComponent* SniperGun;
 
 public:
 
@@ -80,5 +83,16 @@ public:
 	//총알 발사 처리
 	void InputFire(const struct FInputActionValue& inputValue);
 
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_HandGun;
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	class UInputAction* IA_SniperGun;
+
+	// 권총(Hand Gun)을 사용 중인지 확인
+	bool bUsingHandGun = true;
+	// 권총(Hand GUn) 으로 변경
+	void ChangeToHandGun(const struct FInputActionValue& inputValue);
+	// thchd(Sniper Gun) 으로 변경
+	void ChangeToSniperGun(const struct FInputActionValue& inputValue);
 
 };
