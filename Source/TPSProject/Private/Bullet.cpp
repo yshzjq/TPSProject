@@ -26,7 +26,7 @@ ABullet::ABullet()
 	// 3. Move Component 를 만들고 속력과 바운스를 설정한다.
 	MoveComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("MoveComp"));
 	MoveComp->InitialSpeed = 3000.f;
-	MoveComp->MaxSpeed = 3000.f;FirePosition
+	MoveComp->MaxSpeed = 3000.f;
 	MoveComp->bShouldBounce = true;
 	MoveComp->Bounciness = .3f;
 

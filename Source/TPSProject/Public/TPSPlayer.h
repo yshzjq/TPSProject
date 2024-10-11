@@ -35,8 +35,8 @@ public:
 	class UCameraComponent* CameraComp;
 
 	//ÄÄÆ÷³ÍÆ® - Weapon (±ÇÃÑ) »ý·«20240819¿µ»ó
-	UPROPERTY(EditAnywhere,Category = weapon)
-	class USkeletalMeshComponent* HandGun;  
+	//UPROPERTY(EditAnywhere,Category = weapon)
+	//class USkeletalMeshComponent* HandGun;  
 
 public:
 

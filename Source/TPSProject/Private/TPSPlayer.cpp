@@ -49,21 +49,21 @@ ATPSPlayer::ATPSPlayer()
 		JumpMaxCount = 2;
 		GetCharacterMovement()->AirControl = 1;
 
-		// 컴포넌트 권총() 생략20240819영상
-		HandGun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BerettaPistol"));
-		// 권총을 Mesh에 붙인다.
-		HandGun->SetupAttachment(GetMesh());
-		HandGun->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		//// 컴포넌트 권총() 생략20240819영상
+		//HandGun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BerettaPistol"));
+		//// 권총을 Mesh에 붙인다.
+		//HandGun->SetupAttachment(GetMesh());
+		//HandGun->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-		ConstructorHelpers::FObjectFinder<USkeletalMesh> tempHandGun(TEXT("/Script/Engine.SkeletalMesh'/Game/Resources/GunBeretta/source/9mm_Hand_gun.9mm_Hand_gun'"));
+		//ConstructorHelpers::FObjectFinder<USkeletalMesh> tempHandGun(TEXT("/Script/Engine.SkeletalMesh'/Game/Resources/GunBeretta/source/9mm_Hand_gun.9mm_Hand_gun'"));
 
-		if (tempHandGun.Succeeded())
-		{
-			HandGun->SetSkeletalMesh(tempHandGun.Object);
-			HandGun->SetRelativeLocationAndRotation(FVector(1.4f, 40.5f, 136.2f),FRotator(0,-70,0));
-			HandGun->SetRelativeScale3D(FVector(2.f));
+		//if (tempHandGun.Succeeded())
+		//{
+		//	HandGun->SetSkeletalMesh(tempHandGun.Object);
+		//	HandGun->SetRelativeLocationAndRotation(FVector(1.4f, 40.5f, 136.2f),FRotator(0,-70,0));
+		//	HandGun->SetRelativeScale3D(FVector(2.f));
 
-		}
+		//}
 	}
 
 
@@ -151,7 +151,7 @@ void ATPSPlayer::Move()
 
 void ATPSPlayer::InputFire(const FInputActionValue& inputValue)
 {
-	FTransform FirePosition = HandGun->GetSocketTransform(TEXT("FirePosition"));
+	FTransform FirePosition = GetMesh()->GetSocketTransform(TEXT("FirePosition"));
 	GetWorld()->SpawnActor<ABullet>(BulletFactory, FirePosition);
 }
 
