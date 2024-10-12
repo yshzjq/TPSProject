@@ -106,7 +106,15 @@ void UEnemyFSM::AttackState()
 	{
 		// 3. 공격하고 싶다.
 		UE_LOG(LogTemp, Warning, TEXT("Attack"));
-
+	}
+	// 타깃이 공격 범위를 벗어나면 상태를 이동으로 전환하고 싶다.
+	// 1. 타깃과의 거리가 필요하다
+	float Distance = FVector::Distance(Target->GetActorLocation(), Me->GetActorLocation());
+	// 2. 타깃과의 거리가 공격 범위를 벗어났으니
+	if (Distance > AttackRange)
+	{
+		// 3. 상태를 이동으로 전환하고 싶다.
+		mState = EEnemyState::Move;
 	}
 }
 
