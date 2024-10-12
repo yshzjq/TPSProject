@@ -26,15 +26,11 @@ ATPSPlayer::ATPSPlayer()
 	// Spring Arm -> Target Arm Length : 400
 	SpringArmComp->TargetArmLength = 400;
 	// 위치 (X=0.000000,Y=0.000000,Z=70.000000)
-	SpringArmComp->SetRelativeLocation(FVector(0, 0, 70));
+	SpringArmComp->SetRelativeLocation(FVector(0, 20, 80));
 
 	// Camera를 생성해서 SpringArm에 붙인다.
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
-	
-	// Mesh에 3D 에셋을 로드해서 넣어준다.
-	// 생성자 도우미를 이용해서 스켈레탈 메쉬를 로드한다.
-	ConstructorHelpers::FObjectFinder<USkeletalMesh> tempMesh(TEXT("/Script/Engine.SkeletalMesh'/Game/ParagonWraith/Characters/Heroes/Wraith/Meshes/Wraith.Wraith'"));
 
 	//만약, 로드가 성공했다면
 	if (tempMesh.Succeeded())
@@ -100,7 +96,7 @@ void ATPSPlayer::BeginPlay()
 	CrosshairUI = CreateWidget(GetWorld(), CrosshairUIfactory);
 	SniperUI = CreateWidget(GetWorld(), SniperUIfactory);
 	// 일반 조준 모드 CrosshairUI 화면에 표시
-	CrosshairUI->AddToViewport();
+	//CrosshairUI->AddToViewport();
 
 	
 
