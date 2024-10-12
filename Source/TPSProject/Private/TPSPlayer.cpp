@@ -11,7 +11,7 @@
 #include "Bullet.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
-
+#include "Kismet/KismetMathLibrary.h"
 // Sets default values
 ATPSPlayer::ATPSPlayer()
 {
@@ -97,6 +97,8 @@ void ATPSPlayer::BeginPlay()
 	// 시작할 때 두 개의 위젯을 생성한다.
 	CrosshairUI = CreateWidget(GetWorld(), CrosshairUIfactory);
 	SniperUI = CreateWidget(GetWorld(), SniperUIfactory);
+	// 일반 조준 모드 CrosshairUI 화면에 표시
+	CrosshairUI->AddToViewport();
 
 	
 
@@ -215,6 +217,7 @@ void ATPSPlayer::InputFire(const FInputActionValue& inputValue)
 			FTransform BulletTransform;
 			// 부딪힌 위치 할당
 			BulletTransform.SetLocation(HitInfo.ImpactPoint);
+			BulletTransform.SetRotation(UKismetMathLibrary::Conv_VectorToQuaternion(HitInfo.ImpactNormal));
 			// 총알 파편 효과 객체 생성
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BulletEffectFactory,BulletTransform);
 			
@@ -277,12 +280,14 @@ void ATPSPlayer::SniperAim(const FInputActionValue& inputValue)
 		// 스나이퍼 조준 UI 등록
 		SniperUI->AddToViewport();
 		CameraComp->SetFieldOfView(45.0f);
+		CrosshairUI->RemoveFromParent();
 	}
 	else //Released(Completed) 입력 처리
 	{
 		bSniperAim = false;
 		SniperUI->RemoveFromViewport();
 		CameraComp->SetFieldOfView(90.f);
+		CrosshairUI->AddToViewport();
 	}
 
 }
