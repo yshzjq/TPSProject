@@ -10,6 +10,7 @@
 #include "InputActionValue.h"
 #include "Bullet.h"
 #include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ATPSPlayer::ATPSPlayer()
@@ -183,15 +184,54 @@ void ATPSPlayer::Move()
 
 void ATPSPlayer::InputFire(const FInputActionValue& inputValue)
 {
-	if (bUsingHandGun * (true))
+	if (bUsingHandGun)
 	{
 		FTransform FirePosition = HandGun->GetSocketTransform(TEXT("FirePosition"));
 		GetWorld()->SpawnActor<ABullet>(BulletFactory, FirePosition);
 	}
-	else
+	else if(bUsingSniperGun)
 	{
-		FTransform FirePosition = SniperGun->GetSocketTransform(TEXT("ShootPosition"));
-		GetWorld()->SpawnActor<ABullet>(BulletFactory, FirePosition);
+		FTransform ShootPosition = SniperGun->GetSocketTransform(TEXT("ShootPosition"));
+		GetWorld()->SpawnActor<ABullet>(BulletFactory, ShootPosition);
+
+		//LineTrace의 시작 위치
+		FVector StartPosition = CameraComp->GetComponentLocation();
+		// LineTrace의 종료 위치
+		FVector EndPosition = CameraComp->GetComponentLocation() + CameraComp->GetForwardVector() * 100000;
+		// LineTrace 의 충돌 정보를 담을 변수
+		FHitResult HitInfo;
+		// 충돌 옵션 설정 변수
+		FCollisionQueryParams Params;
+		// 자기 자신(플레이어)는 충돌에서 제외
+		Params.AddIgnoredActor(this);
+		// Channel 필터를 이용한 LineTrace 충돌 검출
+		// 충돌 정보, 시작 위치, 종료 위치, 검출 채널, 충돌 옵션
+		bool bHit = GetWorld()->LineTraceSingleByChannel(HitInfo, StartPosition, EndPosition, ECC_Visibility, Params);
+
+		// 충돌 처리 -> 총알 파편 효과 재생
+		if (bHit)
+		{
+			//총알 파편 효과 트랜스폼
+			FTransform BulletTransform;
+			// 부딪힌 위치 할당
+			BulletTransform.SetLocation(HitInfo.ImpactPoint);
+			// 총알 파편 효과 객체 생성
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BulletEffectFactory,BulletTransform);
+			
+		}
+
+		// 부딪힌 물체의 컴포넌트에 물리가 적용되어 있다면 날려버린다.
+		auto HitComp = HitInfo.GetComponent();
+		// 1. 만약 컴포넌트에 물리가 적용되어 있다면
+		if (HitComp && HitComp->IsSimulatingPhysics())
+		{
+			// 2. 조준한 방향이 필요
+			FVector Dir = (EndPosition - StartPosition).GetSafeNormal();
+			// 날려버릴 방향
+			FVector force = Dir * HitComp->GetMass() * 500000;
+			// 3. 그 방향으로 날려버리고 싶다.
+			HitComp->AddForceAtLocation(force, HitInfo.ImpactPoint);
+		}
 	}
 	
 }
