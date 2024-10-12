@@ -5,6 +5,7 @@
 #include "TPSPlayer.h"
 #include "Enemy.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values for this component's properties
 UEnemyFSM::UEnemyFSM()
@@ -120,10 +121,58 @@ void UEnemyFSM::AttackState()
 
 void UEnemyFSM::DamageState()
 {
+	// 일정 시간 기다렸다가 상대를 대기로 변경하고 싶다.
+	// 1. 시간이 흘렸으니까
+	CurrentTime += GetWorld()->DeltaTimeSeconds;
+	// 2. 만약 경과 시간이 대기 시간을 초과했다면
+	if (CurrentTime > DamageDelayTime)
+	{
+		// 3. 대기 상태로 전환하고 싶다.
+		mState = EEnemyState::Idle;
+		// 경과 시간 초기화
+		CurrentTime = 0;
+	}
 }
 
 void UEnemyFSM::DieState()
 {
+	// 계속 아래로 내려간다.
+	// 등속 운동 공식 P = P0 + VT
+	FVector P0 = Me->GetActorLocation();
+	FVector VT = FVector::DownVector * DieSpeed * GetWorld()->DeltaTimeSeconds;
+	FVector P = P0 + VT;
+	Me->SetActorLocation(P);
+
+	// 만약 2미터 이상 내려왔다면
+	if (P.Z < -200.0f)
+	{
+		// 제거시킨다.
+		Me->Destroy();
+	}
+}
+
+void UEnemyFSM::OnDamageProcess()
+{
+	
+	// 
+	//체력 감소
+	HP--;
+	// 만약 체력이 남아있다면
+	if (HP > 0)
+	{
+		// 상대를 피격으로 전환
+		mState = EEnemyState::Damage;
+
+	}
+	// 그렇지 않다면
+	else
+	{
+		//상태를 죽음으로 전환
+		mState = EEnemyState::Die;
+
+		// 캡슐 컴포넌트 충돌체 비활성화
+		Me->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
 }
 
 
