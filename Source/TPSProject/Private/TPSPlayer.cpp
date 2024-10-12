@@ -261,7 +261,6 @@ void ATPSPlayer::ChangeToSniperGun(const FInputActionValue& inputValue)
 	
 	//SniperUI->AddToViewport();
 	//CrosshairUI->RemoveFromParent();
-
 	//CameraComp->FieldOfView = 45;
 }
 
@@ -287,7 +286,7 @@ void ATPSPlayer::SniperAim(const FInputActionValue& inputValue)
 		bSniperAim = false;
 		SniperUI->RemoveFromViewport();
 		CameraComp->SetFieldOfView(90.f);
-		CrosshairUI->AddToViewport();
+		//CrosshairUI->AddToViewport();
 	}
 
 }
