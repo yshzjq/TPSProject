@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "EnemyFSM.h"
+#include "PlayerAnim.h"
 
 // Sets default values
 ATPSPlayer::ATPSPlayer()
@@ -31,6 +32,10 @@ ATPSPlayer::ATPSPlayer()
 	// Camera를 생성해서 SpringArm에 붙인다.
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
+	
+	// Mesh에 3D 에셋을 로드해서 넣어준다.
+	// 생성자 도우미를 이용해서 스켈레탈 메쉬를 로드한다.
+	ConstructorHelpers::FObjectFinder<USkeletalMesh> tempMesh(TEXT("/Script/Engine.SkeletalMesh'/Game/ParagonWraith/Characters/Heroes/Wraith/Meshes/Wraith.Wraith'"));
 
 	//만약, 로드가 성공했다면
 	if (tempMesh.Succeeded())
@@ -41,45 +46,16 @@ ATPSPlayer::ATPSPlayer()
 		// 회전 (Pitch=0.000000,Yaw=-90.000000,Roll=0.000000)
 		GetMesh()->SetRelativeLocationAndRotation(FVector(0, 0, -90), FRotator(0, -90, 0));
 
-		bUseControllerRotationYaw = false;
+		bUseControllerRotationYaw = true;
 		SpringArmComp->bUsePawnControlRotation = true;
 		CameraComp->bUsePawnControlRotation = false;
-		GetCharacterMovement()->bOrientRotationToMovement = true;
+		GetCharacterMovement()->bOrientRotationToMovement = false;
 
 		JumpMaxCount = 2;
 		GetCharacterMovement()->AirControl = 1;
 
-		// 컴포넌트 권총() 생략20240819영상
-		HandGun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BerettaPistol"));
-		// 권총을 Mesh에 붙인다.
-		HandGun->SetupAttachment(GetMesh(),TEXT("FirePosition"));
-		HandGun->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-		ConstructorHelpers::FObjectFinder<USkeletalMesh> tempHandGun(TEXT("/Script/Engine.SkeletalMesh'/Game/Resources/GunBeretta/source/9mm_Hand_gun.9mm_Hand_gun'"));
-
-		if (tempHandGun.Succeeded())
-		{
-			HandGun->SetSkeletalMesh(tempHandGun.Object);
-			HandGun->SetRelativeLocationAndRotation(FVector(-28.f, -7.25f, 146.f),FRotator(0,-160,0));
-			HandGun->SetRelativeScale3D(FVector(2.f));
-		}
-
-		// 스나이퍼 건을 생성해서 Mesh에 붙인다.
-		SniperGun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CheyTacRifle"));
-		SniperGun->SetupAttachment(GetMesh(),TEXT("ShootPosition"));
-		SniperGun->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-		// 에셋도 로드해서 적용한다.
-		ConstructorHelpers::FObjectFinder<USkeletalMesh> tempSniperGun(TEXT("/Script/Engine.SkeletalMesh'/Game/Resources/GunCheyTac/source/model.model'"));
-
-		if (tempSniperGun.Succeeded())
-		{
-			SniperGun->SetSkeletalMesh(tempSniperGun.Object);
-			SniperGun->SetRelativeLocationAndRotation(FVector(-15.f, 85.f, 160.f),FRotator(0.f,0.f,0.f));
-			SniperGun->SetRelativeScale3D(FVector(0.02f));
-
-		}
-		
+		// 
+		GetMesh()->SetupAttachment(GetMesh(), TEXT("FirePositon"));
 
 	}
 
@@ -92,11 +68,14 @@ void ATPSPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// 초기 속도를 걷기로 설정
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
+
 	// 시작할 때 두 개의 위젯을 생성한다.
 	CrosshairUI = CreateWidget(GetWorld(), CrosshairUIfactory);
 	SniperUI = CreateWidget(GetWorld(), SniperUIfactory);
 	// 일반 조준 모드 CrosshairUI 화면에 표시
-	//CrosshairUI->AddToViewport();
+	CrosshairUI->AddToViewport();
 
 	
 
@@ -110,9 +89,6 @@ void ATPSPlayer::BeginPlay()
 			subsystem->AddMappingContext(IMC_TPS, 0);
 		}
 	}
-
-	// 소총(Hand Gun)으로 기본 설정
-	ChangeToSniperGun(FInputActionValue());
 	
 }
 
@@ -137,12 +113,19 @@ void ATPSPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 		PlayerInput->BindAction(IA_LookUp, ETriggerEvent::Triggered, this, &ATPSPlayer::LookUp);
 		PlayerInput->BindAction(IA_PlayerMove, ETriggerEvent::Triggered, this, &ATPSPlayer::PlayerMove);
 		PlayerInput->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &ATPSPlayer::InputJump);
+		// 달리기 애니메이션
+		PlayerInput->BindAction(IA_Run, ETriggerEvent::Started, this, &ATPSPlayer::InputRun);
+		PlayerInput->BindAction(IA_Run, ETriggerEvent::Completed, this, &ATPSPlayer::InputRun);
+
+
 		PlayerInput->BindAction(IA_Fire, ETriggerEvent::Started, this, &ATPSPlayer::InputFire);
-		PlayerInput->BindAction(IA_HandGun, ETriggerEvent::Started, this, &ATPSPlayer::ChangeToHandGun);
-		PlayerInput->BindAction(IA_SniperGun, ETriggerEvent::Started, this, &ATPSPlayer::ChangeToSniperGun);
+		PlayerInput->BindAction(IA_RifleMode, ETriggerEvent::Started, this, &ATPSPlayer::ChangeToRifle);
+		PlayerInput->BindAction(IA_SniperMode, ETriggerEvent::Started, this, &ATPSPlayer::ChangeToSniper);
 		// 스나이퍼 조준 모드
-		PlayerInput->BindAction(IA_Sniper, ETriggerEvent::Started, this, &ATPSPlayer::SniperAim);
-		PlayerInput->BindAction(IA_Sniper, ETriggerEvent::Completed, this, &ATPSPlayer::SniperAim);
+		PlayerInput->BindAction(IA_SniperAim, ETriggerEvent::Started, this, &ATPSPlayer::SniperAim);
+		PlayerInput->BindAction(IA_SniperAim, ETriggerEvent::Completed, this, &ATPSPlayer::SniperAim);
+		
+
 	}
 }
 
@@ -167,6 +150,21 @@ void ATPSPlayer::PlayerMove(const FInputActionValue& inputValue)
 	Direction.Y = value.Y;
 }
 
+void ATPSPlayer::InputRun()
+{
+	auto Movement = GetCharacterMovement();
+	// 만약 , 현재 달리기 모드라면
+	if (Movement->MaxWalkSpeed > WalkSpeed)
+	{
+		// 걷기 속도로 전환
+		Movement->MaxWalkSpeed = WalkSpeed;
+	}
+	else
+	{
+		Movement->MaxWalkSpeed = RunSpeed;
+	}
+}
+
 void ATPSPlayer::InputJump(const FInputActionValue& inputValue)
 {
 	Jump();
@@ -184,15 +182,27 @@ void ATPSPlayer::Move()
 
 void ATPSPlayer::InputFire(const FInputActionValue& inputValue)
 {
-	if (bUsingHandGun)
+	auto Anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	Anim->PlayAttackAnim();
+
+	//공통된 처리
+	// 총알이 나가는 Transform을 가져옴
+	FTransform FirePosition = GetMesh()->GetSocketTransform(TEXT("FirePosition"));
+	
+	// 그곳에 총알이 발사되는 이펙트를 생성
+
+	
+	
+	//공통된 처리
+	if (bUsingRifle)
 	{
-		FTransform FirePosition = HandGun->GetSocketTransform(TEXT("FirePosition"));
+		//라이플 모드일때 일반 총알을 쏜다.
 		GetWorld()->SpawnActor<ABullet>(BulletFactory, FirePosition);
+		
 	}
-	else if(bUsingSniperGun)
+	else if(bUsingSniper)
 	{
-		FTransform ShootPosition = SniperGun->GetSocketTransform(TEXT("ShootPosition"));
-		GetWorld()->SpawnActor<ABullet>(BulletFactory, ShootPosition);
+		//스나이퍼 모드일때
 
 		//LineTrace의 시작 위치
 		FVector StartPosition = CameraComp->GetComponentLocation();
@@ -217,7 +227,7 @@ void ATPSPlayer::InputFire(const FInputActionValue& inputValue)
 			BulletTransform.SetLocation(HitInfo.ImpactPoint);
 			BulletTransform.SetRotation(UKismetMathLibrary::Conv_VectorToQuaternion(HitInfo.ImpactNormal));
 			// 총알 파편 효과 객체 생성
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BulletEffectFactory,BulletTransform);
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BulletHitEffectFactory,BulletTransform);
 			
 		}
 
@@ -246,35 +256,23 @@ void ATPSPlayer::InputFire(const FInputActionValue& inputValue)
 	
 }
 
-void ATPSPlayer::ChangeToHandGun(const FInputActionValue& inputValue)
+void ATPSPlayer::ChangeToRifle(const FInputActionValue& inputValue)
 {
 	// 권총(Hand Gun)사용
-	bUsingHandGun = true;
-	SniperGun->SetVisibility(false);
-	HandGun->SetVisibility(true);
-
-	//CrosshairUI->AddToViewport();
-	//SniperUI->RemoveFromParent();
-
-	//CameraComp->FieldOfView = 90;
+	bUsingRifle = true;
 }
 
-void ATPSPlayer::ChangeToSniperGun(const FInputActionValue& inputValue)
+void ATPSPlayer::ChangeToSniper(const FInputActionValue& inputValue)
 {
 	// 소총 사용
-	bUsingHandGun = false;
-	SniperGun->SetVisibility(true);
-	HandGun->SetVisibility(false);
+	bUsingRifle = false;
 	
-	//SniperUI->AddToViewport();
-	//CrosshairUI->RemoveFromParent();
-	//CameraComp->FieldOfView = 45;
 }
 
 void ATPSPlayer::SniperAim(const FInputActionValue& inputValue)
 {
 	// 스나이퍼 모드가 아닐 경우 처리하지 않는다.
-	if (bUsingHandGun)
+	if (bUsingRifle)
 	{
 		return;
 	}
@@ -293,7 +291,7 @@ void ATPSPlayer::SniperAim(const FInputActionValue& inputValue)
 		bSniperAim = false;
 		SniperUI->RemoveFromViewport();
 		CameraComp->SetFieldOfView(90.f);
-		//CrosshairUI->AddToViewport();
+		CrosshairUI->AddToViewport();
 	}
 
 }

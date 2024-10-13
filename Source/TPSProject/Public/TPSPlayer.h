@@ -34,13 +34,6 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite)
 	class UCameraComponent* CameraComp;
 
-	//컴포넌트 - Weapon (권총) 생략20240819영상
-	UPROPERTY(EditAnywhere,Category = weapon)
-	class USkeletalMeshComponent* HandGun;  
-
-	UPROPERTY(EditAnywhere,Category = waepon)
-	class USkeletalMeshComponent* SniperGun;
-
 public:
 
 	// 입력 처리 함수 제작
@@ -64,11 +57,18 @@ public:
 	class UInputAction* IA_PlayerMove;
 	// 이동 속도
 	UPROPERTY(EditDefaultsOnly, Category = "PlayerSetting")
-	float walkSpeed = 600;
+	float WalkSpeed = 300;
+	// 달리기 속도
+	UPROPERTY(EditDefaultsOnly, Category = "PlayerSetting")
+	float RunSpeed = 600;
 	// 이동 방향
 	FVector Direction;
 
 	void PlayerMove(const struct FInputActionValue& inputValue);
+
+	UPROPERTY(EditDefaultsOnly, CAtegory = "Input")
+	class UInputAction* IA_Run;
+	void InputRun();
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	class UInputAction* IA_Jump;
@@ -84,22 +84,22 @@ public:
 	void InputFire(const struct FInputActionValue& inputValue);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_HandGun;
+	class UInputAction* IA_RifleMode;
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_SniperGun;
+	class UInputAction* IA_SniperMode;
 
-	// 권총(Hand Gun)을 사용 중인지 확인
+	// RIfle 을 사용 중인지 확인
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = TPS)
-	bool bUsingHandGun = true;
-	// 소총 (Sniper Gun)을 사용 중인지 확인
-	bool bUsingSniperGun = true;
-	// 권총(Hand GUn) 으로 변경
-	void ChangeToHandGun(const struct FInputActionValue& inputValue);
-	// thchd(Sniper Gun) 으로 변경
-	void ChangeToSniperGun(const struct FInputActionValue& inputValue);
+	bool bUsingRifle = true;
+	// Sniper을 사용 중인지 확인
+	bool bUsingSniper = true;
+	// Rifle 으로 변경
+	void ChangeToRifle(const struct FInputActionValue& inputValue);
+	// Sniper 으로 변경
+	void ChangeToSniper(const struct FInputActionValue& inputValue);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	class UInputAction* IA_Sniper;
+	class UInputAction* IA_SniperAim;
 	// 스나이퍼 조준 처리
 	void SniperAim(const struct FInputActionValue& inputValue);
 	//스나이퍼 조준 중인지 여부
@@ -119,8 +119,12 @@ public:
 	class UUserWidget* SniperUI;
 
 	// 총알 파편 효과 공장
-	UPROPERTY(EditDefaultsOnly, Category = BulletEffect)
-	class UParticleSystem* BulletEffectFactory;
+	UPROPERTY(EditDefaultsOnly, Category = BulletHitEffect)
+	class UParticleSystem* BulletHitEffectFactory;
+
+	// 발사 효과 공장
+	UPROPERTY(EditDefaultsOnly, Category = BulletFireEffect)
+	class UParticleSystem* BulletFireEffectFactory;
 
 	
 };
